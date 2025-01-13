@@ -57,13 +57,6 @@ char uart_getc() {
     return USART1->DR & 0xFF;
 }
 
-/*void uart_puts(const char *str) {
-    while (*str) {
-        uart_putc(*str++);
-    }
-}*/
-
-
 void console_puts(const char *s) {
     while (*s != '\0') {
         if (*s == '\r') {
@@ -80,14 +73,30 @@ int console_gets(char *s, int len) {
     char *t = s;
     char c;
 
-    *t = '\000'; // Initialize string to be empty
-    while ((c = uart_getc()) != '\n') {  // Read characters until newline is received
-        *t = c;
-        console_putc(c);  // Echo the character to the console
-        if ((t - s) < len) {
-            t++;  // Move to the next position in the buffer
+    // Initialize the string
+    *t = '\000'; // Start with an empty string
+
+    while (1) {
+        c = uart_getc();  // Receive a character from UART
+
+        if (c == '\n' || c == '\r') {    // Check for newline or carriage return
+            *t = '\000';                // Null-terminate the string
+            console_putc('\n');        // Echo a newline for better formatting
+            break;  // Exit the loop when Enter is pressed
         }
-        *t = '\000'; // Null-terminate the string
+
+        // Check for buffer overflow
+        if (t < (s + len - 1)) {  
+            *t = c;            // Add character to the string
+            console_putc(c);  // Echo the character to the console
+            t++;             // Move to the next position in the buffer
+        }
+        else {
+            console_puts("Input too long\n");  // Handle overflow scenario
+            *t = '\000';   // Null-terminate the string
+            break;        // Exit the loop if the buffer is full
+        }
     }
-    return t - s; // Return the number of characters read
+
+    return t - s;  // Return the number of characters read (excluding null-terminator)
 }
