@@ -29,22 +29,13 @@ int main() {
     register_commands();     // Register all commands
 
     char buffer[CLI_INPUT_BUFFER_SIZE];
-    unsigned int idx = 0;
 
     console_puts("Welcome to Tiny CLI for LED Controller\n");
     console_puts("Type 'help' to see available commands\n");
 
-    while (1) {
-        char c = uart_getc();
-
-        if (c == '\r' || c == '\n') {
-            buffer[idx] = '\0'; // Null-terminate the string
-            cli_process_input(buffer); // Process the command
-            idx = 0; // Reset buffer index
-        } else {
-            buffer[idx++] = c; // Append character to buffer
-            if (idx >= sizeof(buffer)) idx = 0; // Prevent overflow
-        }
+       while (1) {
+        console_gets(buffer, CLI_INPUT_BUFFER_SIZE);  // Get and process input from UART
+        cli_process_input(buffer);  // Process the input
     }
 
     return 0;
